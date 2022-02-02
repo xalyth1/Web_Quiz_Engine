@@ -1,46 +1,47 @@
 package engine;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-//@JsonFilter("myFilter")
 public class Quiz {
+
     private int id;
+
+    @NotNull @NotBlank
     private String title;
+
+    @NotNull @NotBlank
     private String text;
+
+    @NotNull @Size(min = 2)
     private List<String> options;
 
-    //@JsonIgnore
-    private int correctOptionIndex;
+    private Set<Integer> correctOptionsIndices;
 
-    //@JsonIgnore
     private static int currentId = 1;
 
     public Quiz() {
+        correctOptionsIndices = new HashSet<>();
         this.id = currentId;
         currentId++;
     }
 
-//    public Quiz(int id, String title, String text, List<String> options, int correctOptionIndex) {
-//        this.id = id;
-//        this.title = title;
-//        this.text = text;
-//        this.options = options;
-//        this.correctOptionIndex = correctOptionIndex;
-//    }
-
-    public Quiz(String title, String text, List<String> options, int correctOptionIndex) {
+    public Quiz(String title, String text, List<String> options, Set<Integer> correctOptionsIndices) {
         this.id = currentId;
         currentId++;
 
         this.title = title;
         this.text = text;
         this.options = options;
-        this.correctOptionIndex = correctOptionIndex;
+        this.correctOptionsIndices = correctOptionsIndices;
     }
 
     public String getTitle() {
@@ -69,13 +70,13 @@ public class Quiz {
 
 
     @JsonIgnore
-    public int getCorrectOptionIndex() {
-        return correctOptionIndex;
+    public Set<Integer> getCorrectOptionsIndices() {
+        return correctOptionsIndices;
     }
 
     @JsonProperty(value = "answer")
-    public void setCorrectOptionIndex(int correctOptionIndex) {
-        this.correctOptionIndex = correctOptionIndex;
+    public void setCorrectOptionsIndices(Set<Integer> correctOptionsIndices) {
+        this.correctOptionsIndices = correctOptionsIndices;
     }
 
     public int getId() {

@@ -6,23 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import org.apache.catalina.mapper.Mapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.text.html.Option;
+import javax.validation.Valid;
 import java.util.*;
 
 @RestController
 public class Controller {
 
-//    Quiz q1 = new Quiz(1, "The Java Logo", "What is depicted on the Java logo?",
-//            List.of("Robot", "Tea leaf", "Cup of coffee", "Bug"), 2);
-
-    //List<Quiz> listOfQuizzes = List.of(q1);//new ArrayList<>();
     List<Quiz> listOfQuizzes = new ArrayList<>();
-
 
     /**
      * Get all quizzes
@@ -73,15 +67,15 @@ public class Controller {
         return Optional.empty();
     }
 
-
     /**
      * Solving a quiz
      *
-     * @param answer - quiz id
+     * @param answer - set of option answers
      * @return Result - success boolean and feedback
      */
     @PostMapping("/api/quizzes/{id}/solve")
-    public ResponseEntity solveQuiz(@PathVariable int id, @RequestParam int answer) {
+    public ResponseEntity solveQuiz(@PathVariable int id, @RequestBody Answer answer) {
+
         Optional<Quiz> optional = searchById(id);
         if (optional.isEmpty()) {
             return new ResponseEntity(Map.of("error", "there is no quiz with such id!"), HttpStatus.NOT_FOUND);
@@ -89,7 +83,12 @@ public class Controller {
 
         Quiz quiz = optional.get();
         Result result;
-        if (answer == quiz.getCorrectOptionIndex()) {
+
+        Set<Integer> answerSet = new HashSet<>();
+        for(Integer integer : answer.getAnswer())
+            answerSet.add(integer);
+
+        if (answerSet.equals(quiz.getCorrectOptionsIndices())) {
             result = new Result(true, "Congratulations, you're right!");
         } else {
             result = new Result(false, "Wrong answer! Please, try again.");
@@ -98,12 +97,11 @@ public class Controller {
         return new ResponseEntity(result, HttpStatus.OK);
     }
 
-
     /**
      * Create a new quiz
      */
     @PostMapping("/api/quizzes")
-    public ResponseEntity createNewQuiz(@RequestBody Quiz quiz) {
+    public ResponseEntity createNewQuiz(@RequestBody @Valid Quiz quiz) {
 
         listOfQuizzes.add(quiz);
 
