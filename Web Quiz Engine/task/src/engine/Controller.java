@@ -6,17 +6,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
 import java.util.*;
 
 @RestController
 public class Controller {
 
-    List<Quiz> listOfQuizzes = new ArrayList<>();
+    //List<Quiz> listOfQuizzes = new ArrayList<>();
+
+    @Autowired
+    QuizService quizService;
 
     /**
      * Get all quizzes
@@ -25,7 +33,10 @@ public class Controller {
      */
     @GetMapping("/api/quizzes")
     public List<Quiz> getAllQuizzes() {
-        return listOfQuizzes;
+
+        List<Quiz> list = quizService.findAll();
+
+        return list;
     }
 
     /**
@@ -36,7 +47,8 @@ public class Controller {
      */
     @GetMapping("/api/quizzes/{id}")
     public ResponseEntity getQuizById(@PathVariable int id) {
-        Optional<Quiz> optional = searchById(id);
+        //Optional<Quiz> optional = searchById(id);
+        Optional<Quiz> optional = quizService.searchById(id);
         if (optional.isEmpty()) {
             return new ResponseEntity(Map.of("error", "there is no quiz with such id"), HttpStatus.NOT_FOUND);
         }
@@ -59,13 +71,13 @@ public class Controller {
         return new ResponseEntity<>(node, HttpStatus.OK);
     }
 
-    public Optional<Quiz> searchById(int id) {
-        for (Quiz quiz : listOfQuizzes) {
-            if (quiz.getId() == id)
-                return Optional.of(quiz);
-        }
-        return Optional.empty();
-    }
+//    public Optional<Quiz> searchById(int id) {
+//        for (Quiz quiz : listOfQuizzes) {
+//            if (quiz.getId() == id)
+//                return Optional.of(quiz);
+//        }
+//        return Optional.empty();
+//    }
 
     /**
      * Solving a quiz
@@ -76,7 +88,7 @@ public class Controller {
     @PostMapping("/api/quizzes/{id}/solve")
     public ResponseEntity solveQuiz(@PathVariable int id, @RequestBody Answer answer) {
 
-        Optional<Quiz> optional = searchById(id);
+        Optional<Quiz> optional = quizService.searchById(id);
         if (optional.isEmpty()) {
             return new ResponseEntity(Map.of("error", "there is no quiz with such id!"), HttpStatus.NOT_FOUND);
         }
@@ -102,23 +114,7 @@ public class Controller {
      */
     @PostMapping("/api/quizzes")
     public ResponseEntity createNewQuiz(@RequestBody @Valid Quiz quiz) {
-
-        listOfQuizzes.add(quiz);
-
-//        SimpleBeanPropertyFilter theFilter = SimpleBeanPropertyFilter.serializeAllExcept("correctOptionIndex");
-//        FilterProvider filters = new SimpleFilterProvider().addFilter("myFilter", theFilter);
-//        ObjectMapper mapper = new ObjectMapper();
-
-        String quizAsString;
-        JsonNode node;
-        //try {
-//            quizAsString = mapper.writer(filters).writeValueAsString(quiz);
-//            node = mapper.readTree(quizAsString);
-//        } catch (JsonProcessingException e) {
-//            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-
-        //return new ResponseEntity<>(quizAsString, HttpStatus.OK);
+        quizService.save(quiz);
 
         return new ResponseEntity(quiz, HttpStatus.OK);
     }

@@ -7,13 +7,11 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Quiz {
 
-    private int id;
+    private long id;
 
     @NotNull @NotBlank
     private String title;
@@ -24,6 +22,7 @@ public class Quiz {
     @NotNull @Size(min = 2)
     private List<String> options;
 
+    @NotNull
     private Set<Integer> correctOptionsIndices;
 
     private static int currentId = 1;
@@ -34,14 +33,41 @@ public class Quiz {
         currentId++;
     }
 
-    public Quiz(String title, String text, List<String> options, Set<Integer> correctOptionsIndices) {
+    public Quiz(String title, String text, ArrayList<String> options, Set<Integer> correctOptionsIndices) {
         this.id = currentId;
         currentId++;
 
         this.title = title;
         this.text = text;
         this.options = options;
-        this.correctOptionsIndices = correctOptionsIndices;
+
+        HashSet<Integer> corrOptInd = new HashSet<>();
+        for (Integer i : correctOptionsIndices)
+            corrOptInd.add(i);
+        this.correctOptionsIndices = corrOptInd;
+    }
+
+    public Quiz(QuizEntity quizEntity) {
+        this.id = quizEntity.getId();
+        this.title = quizEntity.getTitle();
+        this.text = quizEntity.getText();
+
+        String[] opt = quizEntity.getOptions().split("\n");
+        this.options = List.of(opt);
+
+
+        String entityCorrect = quizEntity.getCorrectOptionsIndices();
+
+        if (entityCorrect == "") {
+            this.correctOptionsIndices = new HashSet<>();
+        } else {
+            String[] correctOpt = quizEntity.getCorrectOptionsIndices().trim().split(",");
+            Integer[] integers = new Integer[correctOpt.length];
+            for (int i = 0; i < correctOpt.length; i++) {
+                integers[i] = Integer.parseInt(correctOpt[i]);
+            }
+            this.correctOptionsIndices = Set.of(integers);
+        }
     }
 
     public String getTitle() {
@@ -64,10 +90,9 @@ public class Quiz {
         return options;
     }
 
-    public void setOptions(List<String> options) {
+    public void setOptions(ArrayList<String> options) {
         this.options = options;
     }
-
 
     @JsonIgnore
     public Set<Integer> getCorrectOptionsIndices() {
@@ -75,11 +100,11 @@ public class Quiz {
     }
 
     @JsonProperty(value = "answer")
-    public void setCorrectOptionsIndices(Set<Integer> correctOptionsIndices) {
+    public void setCorrectOptionsIndices(HashSet<Integer> correctOptionsIndices) {
         this.correctOptionsIndices = correctOptionsIndices;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 }
